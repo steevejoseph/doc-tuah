@@ -8,7 +8,7 @@
       //   "module": "uvicorn",
       "module": "fastapi",
       //   "args": ["app:app", "--reload", "--port", "8000"],
-      "args": ["dev", "app.py"],
+      "args": ["dev", "main.py"],
       "jinja": true,
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
