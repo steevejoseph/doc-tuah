@@ -1,5 +1,5 @@
 import argparse
-from langchain_chroma import Chroma
+from langchain_chroma.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
@@ -28,10 +28,15 @@ def main():
     query_rag(query_text)
 
 
-def query_rag(query_text: str) -> str:
+def query_rag(query_text: str, doc_id: str = None) -> str:
     # Prepare the DB.
     embedding_function = get_embedding_function()
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+
+    # TODO(steevejoseph): Implement filtering by doc_id
+    # docs = db.get()
+    # ids = docs["ids"]
+    # where_document = {"$contains": f"(?){doc_id}"} if doc_id else {}
 
     # Search the DB.
     results = db.similarity_search_with_score(query_text, k=5)
