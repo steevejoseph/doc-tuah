@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      //   "module": "uvicorn",
+      "module": "fastapi",
+      //   "args": ["app:app", "--reload", "--port", "8000"],
+      "args": ["dev", "app.py"],
+      "jinja": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
