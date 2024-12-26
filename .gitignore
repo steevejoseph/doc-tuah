@@ -1,7 +1,7 @@
 *.pyc
 .DS_Store
 backup
-chroma
+app/chroma
 
 
 # Byte-compiled / optimized / DLL files
