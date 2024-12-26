@@ -148,6 +148,8 @@ resource "azurerm_network_interface_security_group_association" "nsg_association
 }
 
 # Virtual Machine
+# Note: Removed custom_data section that was trying to run scripts during cloud-init
+# This is more reliable as we'll copy and execute scripts after VM is fully provisioned
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = var.instance_name
   resource_group_name = azurerm_resource_group.rg.name
@@ -167,7 +169,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    disk_size_gb = 30
+    disk_size_gb         = 30
   }
 
   source_image_reference {
@@ -176,20 +178,80 @@ resource "azurerm_linux_virtual_machine" "vm" {
     sku       = "11"
     version   = "latest"
   }
-
-  custom_data = base64encode(<<-EOF
-    #!/bin/bash
-
-    # Install Docker and Docker Compose
-    ${file("${path.module}/scripts/install_docker.sh")}
-
-    # Run Chroma setup script
-    ${file("${path.module}/scripts/setup_chroma.sh")}
-    EOF
-  )
 }
 
-# Output
+# Null resource for script deployment
+# This approach is more reliable than cloud-init because:
+# 1. We wait for VM to be fully provisioned (depends_on)
+# 2. We can verify script delivery and execution
+# 3. We have better error handling and visibility
+resource "null_resource" "setup_scripts" {
+  # Ensure VM is created before trying to copy files
+  depends_on = [azurerm_linux_virtual_machine.vm]
+
+  # Copy install_docker.sh to VM
+  provisioner "file" {
+    source      = "${path.module}/scripts/install_docker.sh"
+    destination = "/home/azureuser/install_docker.sh"
+
+    # SSH connection details for file copy
+    connection {
+      type        = "ssh"
+      user        = "azureuser"
+      host        = azurerm_public_ip.public_ip.ip_address
+      private_key = file(replace(var.ssh_public_key_path, ".pub", ""))
+    }
+  }
+
+  # Copy setup_chroma.sh to VM
+  provisioner "file" {
+    source      = "${path.module}/scripts/setup_chroma.sh"
+    destination = "/home/azureuser/setup_chroma.sh"
+
+    # SSH connection details for file copy
+    connection {
+      type        = "ssh"
+      user        = "azureuser"
+      host        = azurerm_public_ip.public_ip.ip_address
+      private_key = file(replace(var.ssh_public_key_path, ".pub", ""))
+    }
+  }
+
+  # Execute the scripts
+  provisioner "remote-exec" {
+    inline = [
+      # Debug: Print commands and their output
+      "set -x",
+      
+      # Fix locale issues first
+      "sudo apt-get update || echo 'apt-get update failed'",
+      "sudo apt-get install -y locales || echo 'locales installation failed'",
+      "sudo locale-gen en_US.UTF-8 || echo 'locale-gen failed'",
+      "sudo update-locale LANG=en_US.UTF-8 || echo 'update-locale failed'",
+      
+      # Debug: Check if scripts exist
+      "ls -l /home/azureuser/install_docker.sh || echo 'install_docker.sh not found'",
+      "ls -l /home/azureuser/setup_chroma.sh || echo 'setup_chroma.sh not found'",
+      
+      # Make scripts executable
+      "chmod +x /home/azureuser/install_docker.sh || echo 'chmod failed for install_docker.sh'",
+      "chmod +x /home/azureuser/setup_chroma.sh || echo 'chmod failed for setup_chroma.sh'",
+      
+      # Run scripts with error output
+      "sudo /home/azureuser/install_docker.sh 2>&1 || echo 'install_docker.sh failed'",
+      "sudo /home/azureuser/setup_chroma.sh 2>&1 || echo 'setup_chroma.sh failed'"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "azureuser"
+      host        = azurerm_public_ip.public_ip.ip_address
+      private_key = file(replace(var.ssh_public_key_path, ".pub", ""))
+    }
+  }
+}
+
+# Output the public IP for easy access
 output "public_ip_address" {
   description = "Public IP address of the Chroma server"
   value       = azurerm_public_ip.public_ip.ip_address
