@@ -165,10 +165,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   os_disk {
-    caching                   = "ReadWrite"
-    storage_account_type      = "Standard_LRS"
-    disk_size_gb                = 30
-    write_accelerator_enabled = false
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+    disk_size_gb = 30
   }
 
   source_image_reference {
@@ -178,35 +177,140 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 
-  custom_data = base64encode(<<-EOT
+  custom_data = base64encode(<<EOT
     #!/bin/bash
-    USER=chroma
-    useradd -m -s /bin/bash $USER
-    apt-get update
-    apt-get install -y docker.io
-    usermod -aG docker $USER
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-    systemctl enable docker
+    set -e  # Exit on error
+
+    # Function for retrying commands
+    retry_command() {
+        local retries=5
+        local wait=10
+        local command="$@"
+        local n=1
+        until [ $n -gt $retries ]
+        do
+            echo "Attempt $${n}/$${retries}: $${command}"
+            $${command} && break || {
+                if [ $${n} -eq $${retries} ]; then
+                    echo "Command '$${command}' failed after $${n} attempts"
+                    return 1
+                fi
+                echo "Command failed. Waiting $${wait} seconds..."
+                sleep $${wait}
+                ((n++))
+            }
+        done
+    }
+
+    # Function to detect OS and set package manager
+    setup_package_manager() {
+        if [ -f /etc/debian_version ]; then
+            PKG_MANAGER="apt-get"
+            PKG_UPDATE="$PKG_MANAGER update"
+            PKG_INSTALL="$PKG_MANAGER install -y"
+            OS_FAMILY="debian"
+        elif [ -f /etc/redhat-release ]; then
+            PKG_MANAGER="dnf"
+            PKG_UPDATE="$PKG_MANAGER check-update"
+            PKG_INSTALL="$PKG_MANAGER install -y"
+            OS_FAMILY="redhat"
+        else
+            echo "Unsupported operating system"
+            exit 1
+        fi
+    }
+
+    # Initialize system
+    echo "Initializing system..."
+    setup_package_manager
+
+    # Update package list
+    echo "Updating package list..."
+    retry_command "$PKG_UPDATE"
+
+    # Install prerequisites
+    echo "Installing prerequisites..."
+    retry_command "$PKG_INSTALL \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release"
+
+    # Install Docker using official script
+    echo "Installing Docker..."
+    retry_command "curl -fsSL https://get.docker.com -o get-docker.sh"
+    retry_command "sh get-docker.sh"
+    rm get-docker.sh
+
+    # Start and enable Docker
+    echo "Starting Docker service..."
     systemctl start docker
+    systemctl enable docker
 
-    mkdir -p /home/\$USER/config
-    curl -o /home/\$USER/docker-compose.yml https://s3.amazonaws.com/public.trychroma.com/cloudformation/assets/docker-compose.yml
-    sed -i "s/CHROMA_VERSION/${var.chroma_version}/g" /home/\$USER/docker-compose.yml
+    # Create chroma user and group
+    echo "Setting up Chroma user..."
+    useradd -r -s /bin/false chroma || true
+    usermod -aG docker chroma
 
-    # Create .env file
-    echo "CHROMA_SERVER_AUTHN_CREDENTIALS=${var.chroma_server_auth_credentials}" >> /home/\$USER/.env
-    echo "CHROMA_SERVER_AUTHN_PROVIDER=${var.chroma_server_auth_provider}" >> /home/\$USER/.env
-    echo "CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=${var.chroma_auth_token_transport_header}" >> /home/\$USER/.env
-    echo "CHROMA_OTEL_COLLECTION_ENDPOINT=${var.chroma_otel_collection_endpoint}" >> /home/\$USER/.env
-    echo "CHROMA_OTEL_SERVICE_NAME=${var.chroma_otel_service_name}" >> /home/\$USER/.env
-    echo "CHROMA_OTEL_COLLECTION_HEADERS=${var.chroma_otel_collection_headers}" >> /home/\$USER/.env
-    echo "CHROMA_OTEL_GRANULARITY=${var.chroma_otel_granularity}" >> /home/\$USER/.env
+    # Set up Chroma
+    echo "Setting up Chroma..."
+    mkdir -p /home/chroma
+    cd /home/chroma
 
-    chown \$USER:\$USER /home/\$USER/.env /home/\$USER/docker-compose.yml
-    cd /home/\$USER
-    sudo -u \$USER docker-compose up -d
+    # Download and verify docker-compose file
+    echo "Downloading Chroma docker-compose file..."
+    retry_command "curl -o docker-compose.yml https://s3.amazonaws.com/public.trychroma.com/cloudformation/assets/docker-compose.yml"
+
+    # Update Chroma version if specified
+    if [ ! -z "${var.chroma_version}" ]; then
+        sed -i "s/latest/${var.chroma_version}/g" docker-compose.yml
+    fi
+
+    # Create .env file with proper quoting
+    echo "Creating Chroma environment file..."
+    cat > .env <<EOF
+    CHROMA_SERVER_AUTHN_CREDENTIALS="${var.chroma_server_auth_credentials}"
+    CHROMA_SERVER_AUTHN_PROVIDER="${var.chroma_server_auth_provider}"
+    CHROMA_AUTH_TOKEN_TRANSPORT_HEADER="${var.chroma_auth_token_transport_header}"
+    CHROMA_OTEL_COLLECTION_ENDPOINT="${var.chroma_otel_collection_endpoint}"
+    CHROMA_OTEL_SERVICE_NAME="${var.chroma_otel_service_name}"
+    CHROMA_OTEL_COLLECTION_HEADERS='${var.chroma_otel_collection_headers}'
+    CHROMA_OTEL_GRANULARITY="${var.chroma_otel_granularity}"
+    EOF
+
+    # Set proper permissions
+    echo "Setting proper permissions..."
+    chown -R chroma:chroma /home/chroma
+    chmod 600 /home/chroma/.env
+
+    # Start Chroma
+    echo "Starting Chroma..."
+    cd /home/chroma
+    docker compose up -d
+
+    # Wait for Chroma to be ready with improved error handling
+    echo "Waiting for Chroma to be ready..."
+    for i in {1..30}; do
+        if curl -s http://localhost:8000/api/v1/heartbeat > /dev/null; then
+            echo "Chroma is ready!"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            echo "Timeout waiting for Chroma to start"
+            docker compose logs
+            exit 1
+        fi
+        echo "Waiting for Chroma to start... (attempt $${i}/30)"
+        sleep 10
+    done
+
+    # Final status check
+    echo "Checking final status..."
+    docker ps
+    docker compose logs
+
+    echo "Initialization complete!"
   EOT
   )
 }
