@@ -3,10 +3,11 @@ from langchain_chroma.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
+from app.services.utils.chroma_client import CHROMA_PATH, get_chroma_client
+
 
 from .embeddings import get_embedding_function
 
-CHROMA_PATH = "chroma"
 
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
@@ -30,8 +31,7 @@ def main():
 
 def query_rag(query_text: str, doc_id: str = None) -> str:
     # Prepare the DB.
-    embedding_function = get_embedding_function()
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+    db = get_chroma_client()
 
     # TODO(steevejoseph): Implement filtering by doc_id
     # docs = db.get()

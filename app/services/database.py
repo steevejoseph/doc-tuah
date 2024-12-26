@@ -7,11 +7,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
 
+from app.services.utils.chroma_client import DATA_PATH, get_chroma_client
+
 from .embeddings import get_embedding_function
-
-
-CHROMA_PATH = "chroma"
-DATA_PATH = "data"
 
 
 def main():
@@ -31,6 +29,10 @@ def main():
 
 
 def load_documents():
+    current_file_path = os.path.abspath(__file__)
+    print(f"📄 Current file location: {current_file_path}")
+    print(f"📂 Data path relative to current file: {os.path.abspath(DATA_PATH)}")
+
     document_loader = PyPDFDirectoryLoader(DATA_PATH)
     return document_loader.load()
 
@@ -46,10 +48,8 @@ def split_documents(documents: list[Document]):
 
 
 def add_to_chroma(chunks: list[Document]):
-    # Load the existing database.
-    db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
-    )
+
+    db = get_chroma_client()
 
     # Calculate Page IDs.
     chunks_with_ids = calculate_chunk_ids(chunks)
@@ -103,8 +103,14 @@ def calculate_chunk_ids(chunks):
 
 
 def clear_database():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
+    # local chroma DB
+    # if os.path.exists(CHROMA_PATH):
+    #     shutil.rmtree(CHROMA_PATH)
+
+    db = get_chroma_client()
+
+    # Delete all collections in the database
+    db.delete_collection()
 
 
 if __name__ == "__main__":
