@@ -60,9 +60,13 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  default = ""
+}
+
 provider "azurerm" {
-  # @steeve: remove this before checking in
-  subscription_id = "01def7cf-f6e4-449d-88de-1e20f2291bc8"
+  subscription_id = var.subscription_id
   features {}
 }
 
