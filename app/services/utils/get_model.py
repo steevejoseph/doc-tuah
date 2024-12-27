@@ -11,7 +11,7 @@ def get_model():
 
     return AzureOpenAI(
         azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY,
+        api_key=settings.AZURE_OPENAI_API_CHAT_DEPLOYMENT_KEY,
         api_version=settings.AZURE_OPENAI_API_VERSION,
         deployment_name=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
     )

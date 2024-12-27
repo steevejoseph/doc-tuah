@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     DEBUG_USE_LOCAL_CHROMA: bool = False
 
     # Azure OpenAI Settings
-    AZURE_OPENAI_API_KEY: str | None = None
+    AZURE_OPENAI_API_CHAT_DEPLOYMENT_KEY: str | None = None
+    AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_KEY: str | None = None
     AZURE_OPENAI_ENDPOINT: str | None = None
     AZURE_OPENAI_API_VERSION: str | None = None
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str | None = None

@@ -11,7 +11,7 @@ def get_embedding_function():
 
     return AzureOpenAIEmbeddings(
         azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY,
+        api_key=settings.AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_KEY,
         api_version=settings.AZURE_OPENAI_API_VERSION,
         azure_deployment=settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
     )
