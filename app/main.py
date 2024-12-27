@@ -1,8 +1,13 @@
-from fastapi import FastAPI
-from api import v1
+# Standard library imports
+import time
+
+# Third-party imports
 import chromadb
 import requests
-import time
+from fastapi import FastAPI
+
+# Local application imports
+from app.api import v1
 
 app = FastAPI()
 
@@ -13,8 +18,8 @@ app.include_router(v1.router, prefix="/api/v1")
 def read_root():
     return {"Hello": "World"}
 
-
-host = "40.71.92.73"
+# @steeve: figure out env vars in Azure?
+host = "52.191.113.76"
 port = 8000
 
 
