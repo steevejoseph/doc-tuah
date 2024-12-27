@@ -5,6 +5,7 @@
 First, infrastructure needs to be setup. In `infrastructure`, there are folders for chromaDB setup in Azure and Azure OpenAI Embeddings Setup.
 
 <!-- TODO(stjoseph): Streamline the Terraform deployment to have one file set up everything  -->
+     Issue URL: https://github.com/steevejoseph/doc-tuah/issues/2
 
 Do the chromaDB part first with Terraform and then do the Azure setup part (working on streamlining this)
 
