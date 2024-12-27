@@ -32,6 +32,7 @@ provider "azurerm" {
 
 # Don't create the rg here, should already be created by Chroma terraform part
 # TODO(steevejoseph): Ideally a root tf should create everything
+# Issue URL: https://github.com/steevejoseph/doc-tuah/issues/1
 # For now we must do the chroma terraform deployment then the azure-open-ai terraform deployment
 # resource "azurerm_resource_group" "openai" {
 #   name     = var.resource_group_name
