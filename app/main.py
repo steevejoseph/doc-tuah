@@ -8,7 +8,9 @@ from fastapi import FastAPI
 
 # Local application imports
 from app.api import v1
+from app.core.config import get_settings
 
+settings = get_settings()
 app = FastAPI()
 
 app.include_router(v1.router, prefix="/api/v1")
@@ -18,9 +20,9 @@ app.include_router(v1.router, prefix="/api/v1")
 def read_root():
     return {"Hello": "World"}
 
-# @steeve: figure out env vars in Azure?
-host = "52.191.113.76"
-port = 8000
+# Use settings from config
+host = settings.CHROMA_HOST or "localhost"
+port = settings.CHROMA_PORT or 8000
 
 
 def test_connection():
