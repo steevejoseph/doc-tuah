@@ -1,48 +1,29 @@
-# rag-tutorial-v2
-[OG tutorial](https://www.youtube.com/watch?v=2TJxpyO3ei4)
+# Doc Tuah: A RAG App That Allows you to Chat with Docs
+
+## Setup
+
+First, infrastructure needs to be setup. In `infrastructure`, there are folders for chromaDB setup in Azure and Azure OpenAI Embeddings Setup.
+
+<!-- TODO(stjoseph): Streamline the Terraform deployment to have one file set up everything  -->
+
+Do the chromaDB part first with Terraform and then do the Azure setup part (working on streamlining this)
+
+## Use
+
+Some example commands
+
+```python
+# (From the root of the project, using python3)
+
+# Fill db with local files (Monopoly and Ticket To Ride)
+#  - only needs to be called once
+python -m app.services.populate_database
 
 
-## Notes
-On my M1 Macbook pro w/ 16GB ram, it takes ~8 seconds to query the DB for something simple (How to get 200 in monopoly)
-![alt text](assets/images/two-hundred-dollars.png)
-
-4268s (1hr 12 minutes) to add CLRS PDF to the db
-![alt](assets/images/upload-clrs.png)
+# Chat with the DB
+python -m app.services.query_data "How do I get 200 dollars"
 
 
-Querying the DB for binary search in python gives:
-![alt text](assets/images/bin-search-python.png)
-
-Asking the same for typescript gives:
-![alt text](assets/images/bin-search-typescript.png)
-
-
-From my understanding, the basics for the RAG app were:
-
-
-For each new PDF:
-1. Chunk up the document
-2. Turn each chunk into an embedding
-3. Populate chromaDB with each embedding
-
-When querying:
-1. Turn query into an embedding
-2. FInd matching embedding in vector DB (Chroma)
-
-
-What to do now:
-Need to figure out which parts running locally can be done in the cloud
-
-At the very least, need a hosted solution for ChromaDB
-Also need a hosted model to generate the embeddings
-
-I'm thinking of using Azure for everything, as I currently get mucho monthly credits
-
-
-### Vector Storage
-Currently top 2 options are ChromaDB and Pinecone
-
-Pinecone is a ready-made and managed solution, but pricing starts at $70/mo if you have more than one solutiono
-
-
-ChromaDB is OSS and we just need to implement infrastructure
+# Optional Clear database (e.g. when using a model with different dimensionality)
+python -m app.services.populate_database --reset
+```
