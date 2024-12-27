@@ -2,13 +2,11 @@
 import argparse
 
 # Third-party imports
-from langchain_chroma.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
-from langchain_ollama import OllamaLLM
 
 # Local application imports
+from app.services.utils.get_model import get_model
 from app.services.utils.chroma_client import get_chroma_client
-from app.services.get_embedding_function import get_embedding_function
 
 
 PROMPT_TEMPLATE = """
@@ -48,7 +46,7 @@ def query_rag(query_text: str, doc_id: str = None) -> str:
     prompt = prompt_template.format(context=context_text, question=query_text)
     # print(prompt)
 
-    model = OllamaLLM(model="mistral")
+    model = get_model()
     response_text = model.invoke(prompt)
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
