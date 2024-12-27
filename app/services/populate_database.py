@@ -112,6 +112,9 @@ def clear_database():
     # Delete all collections in the database
     db.delete_collection()
 
+    # Important: Create a new collection with the correct embedding function
+    db = get_chroma_client()  # This will create a fresh collection
+
 
 if __name__ == "__main__":
     main()
