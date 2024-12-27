@@ -12,16 +12,16 @@ class Settings(BaseSettings):
     DEBUG_USE_LOCAL_CHROMA: bool = False
 
     # Azure OpenAI Settings
-    AZURE_OPENAI_API_CHAT_DEPLOYMENT_KEY: str | None = None
-    AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_KEY: str | None = None
-    AZURE_OPENAI_ENDPOINT: str | None = None
-    AZURE_OPENAI_API_VERSION: str | None = None
-    AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str | None = None
-    AZURE_OPENAI_CHAT_DEPLOYMENT: str | None = None
+    AZURE_OPENAI_API_CHAT_DEPLOYMENT_KEY: str = ""
+    AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_KEY: str = ""
+    AZURE_OPENAI_ENDPOINT: str = ""
+    AZURE_OPENAI_API_VERSION: str = ""
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = ""
+    AZURE_OPENAI_CHAT_DEPLOYMENT: str = ""
 
-    # ChromaDB Settings
-    CHROMA_HOST: str | None = None
-    CHROMA_PORT: str | None = None
+    # ChromaDB Settings - read from env file by default
+    CHROMA_HOST: str = ""
+    CHROMA_PORT: str = ""
     CHROMA_SSL: bool = False
     CHROMA_API_IMPL: str = ""
 
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = f".env.{os.getenv('ENV', 'development')}"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Only override CHROMA_HOST when using local ChromaDB
+        if self.DEBUG_USE_LOCAL_CHROMA:
+            self.CHROMA_HOST = "localhost"
 
 
 @lru_cache()
