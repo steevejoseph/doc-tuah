@@ -1,5 +1,8 @@
-from services import query_rag
+# Third-party imports
 from langchain_community.llms.ollama import Ollama
+
+# Local application imports
+from app.services import query_rag
 
 EVAL_PROMPT = """
 Expected Response: {expected_response}

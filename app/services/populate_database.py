@@ -1,11 +1,15 @@
+# Standard library imports
 import argparse
 import os
 import shutil
+
+# Third-party imports
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.document_loaders.text import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
 
+# Local application imports
 from app.services.utils.chroma_client import DATA_PATH, get_chroma_client
 
 def main():

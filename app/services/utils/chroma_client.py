@@ -1,21 +1,19 @@
+# Standard library imports
 import os
+
+# Third-party imports
 from chromadb.config import Settings
 from langchain_chroma import Chroma
 
-# For azure cloud chroma instance
-from chromadb.config import Settings
+# Local application imports
+from app.services.get_embedding_function import get_embedding_function
 
-from ..get_embedding_function import get_embedding_function
-
-# this is for local instance of chroma
+# Constants
 CHROMA_PATH = "chroma"
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
-
-# this is for prod instance
-# Add these new constants at the top with your other constants
-CHROMA_HOST = "52.191.113.76"  # Replace with your Azure host
-CHROMA_PORT = "8000"  # Default ChromaDB port
-CHROMA_SSL = False  # Enable SSL for secure connections
+CHROMA_HOST = "52.191.113.76"
+CHROMA_PORT = "8000"
+CHROMA_SSL = False
 CHROMA_API_IMPL = "chromadb.api.fastapi.FastAPI"
 
 

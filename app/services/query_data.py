@@ -1,12 +1,14 @@
+# Standard library imports
 import argparse
+
+# Third-party imports
 from langchain_chroma.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
-from app.services.utils.chroma_client import CHROMA_PATH, get_chroma_client
-
-
-from .get_embedding_function import get_embedding_function
+# Local application imports
+from app.services.utils.chroma_client import get_chroma_client
+from app.services.get_embedding_function import get_embedding_function
 
 
 PROMPT_TEMPLATE = """

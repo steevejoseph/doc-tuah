@@ -1,8 +1,9 @@
+# Third-party imports
 from fastapi import APIRouter, HTTPException
 
-from api.v1.models import Query
-
-from services import query_rag
+# Local application imports
+from app.api.v1.models import Query
+from app.services import query_rag
 
 router = APIRouter()
 
