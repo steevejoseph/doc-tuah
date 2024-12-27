@@ -6,7 +6,7 @@ from langchain_ollama import OllamaLLM
 from app.services.utils.chroma_client import CHROMA_PATH, get_chroma_client
 
 
-from .embeddings import get_embedding_function
+from .get_embedding_function import get_embedding_function
 
 
 PROMPT_TEMPLATE = """

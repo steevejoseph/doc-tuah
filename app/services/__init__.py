@@ -1,6 +1,6 @@
-from .embeddings import get_embedding_function
-from .database import load_documents, split_documents, add_to_chroma
-from .rag import query_rag
+from .get_embedding_function import get_embedding_function
+from .populate_database import load_documents, split_documents, add_to_chroma
+from .query_data import query_rag
 
 __all__ = [
     "get_embedding_function",

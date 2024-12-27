@@ -5,7 +5,7 @@ from langchain_chroma import Chroma
 # For azure cloud chroma instance
 from chromadb.config import Settings
 
-from ..embeddings import get_embedding_function
+from ..get_embedding_function import get_embedding_function
 
 # this is for local instance of chroma
 CHROMA_PATH = "chroma"
