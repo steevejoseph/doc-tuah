@@ -74,6 +74,7 @@ def query_rag(query_text: str, doc_id: str = None) -> str:
 
     # Prefer streaming until API is ready to return
     # TODO(steevejoseph): Re-enable and have API return
+    # Issue URL: https://github.com/steevejoseph/doc-tuah/issues/3
     # just the big chunk
     # response_text = model.invoke(model, prompt)
     response_text = stream_response(model, prompt)
