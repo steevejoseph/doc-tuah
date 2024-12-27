@@ -1,18 +1,17 @@
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import AzureOpenAIEmbeddings
+from app.core.config import get_settings
 
 
 def get_embedding_function():
-    # Use Ollama embeddings for local debugging
-    embeddings = OllamaEmbeddings(model="mistral")
+    settings = get_settings()
 
-    # Use an Azure OpenAI embedding on PROD
+    if settings.DEBUG_USE_LOCAL_MODEL:
+        return OllamaEmbeddings(model=settings.LOCAL_MODEL_NAME)
 
-    # embeddings = AzureOpenAIEmbeddings(
-    #     azure_endpoint="https://YOUR_RESOURCE_NAME.openai.azure.com",
-    #     api_key="YOUR_API_KEY",
-    #     api_version="2024-02-15-preview",
-    #     deployment_name="YOUR_EMBEDDING_DEPLOYMENT_NAME",  # e.g., text-embedding-ada-002
-    # )
-
-    return embeddings
+    return AzureOpenAIEmbeddings(
+        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+        api_key=settings.AZURE_OPENAI_API_KEY,
+        api_version=settings.AZURE_OPENAI_API_VERSION,
+        azure_deployment=settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+    )

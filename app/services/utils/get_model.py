@@ -1,18 +1,17 @@
-# Old:
 from langchain_ollama import OllamaLLM
-
-# New:
 from langchain_openai import AzureOpenAI
+from app.core.config import get_settings
 
 
 def get_model():
-    # For debugging using local model
-    model = OllamaLLM(model="mistral")
+    settings = get_settings()
 
-    # model = AzureOpenAI(
-    #     azure_endpoint="https://YOUR_RESOURCE_NAME.openai.azure.com",
-    #     api_key="YOUR_API_KEY",
-    #     api_version="2024-02-15-preview",
-    #     deployment_name="YOUR_DEPLOYMENT_NAME",
-    # )
-    return model
+    if settings.DEBUG_USE_LOCAL_MODEL:
+        return OllamaLLM(model=settings.LOCAL_MODEL_NAME)
+
+    return AzureOpenAI(
+        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+        api_key=settings.AZURE_OPENAI_API_KEY,
+        api_version=settings.AZURE_OPENAI_API_VERSION,
+        deployment_name=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    )

@@ -7,33 +7,29 @@ from langchain_chroma import Chroma
 
 # Local application imports
 from app.services.get_embedding_function import get_embedding_function
+from app.core.config import get_settings
 
 # Constants
-CHROMA_PATH = "chroma"
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
-CHROMA_HOST = "52.191.113.76"
-CHROMA_PORT = "8000"
-CHROMA_SSL = False
-CHROMA_API_IMPL = "chromadb.api.fastapi.FastAPI"
-
 
 def get_chroma_client():
-    # Configure Chroma client for remote connection
+    settings = get_settings()
+
+    if settings.DEBUG_USE_LOCAL_CHROMA:
+        # Use local Chroma instance for debugging
+        return Chroma(
+            persist_directory=settings.CHROMA_LOCAL_PATH,
+            embedding_function=get_embedding_function(),
+        )
+
+    # Use remote Chroma client (default for both development and production)
     chroma_settings = Settings(
-        chroma_api_impl=CHROMA_API_IMPL,  # Use REST API for remote connection
-        chroma_server_host=CHROMA_HOST,
-        chroma_server_http_port=CHROMA_PORT,
-        chroma_server_ssl_enabled=CHROMA_SSL,
+        chroma_api_impl=settings.CHROMA_API_IMPL,
+        chroma_server_host=settings.CHROMA_HOST,
+        chroma_server_http_port=settings.CHROMA_PORT,
+        chroma_server_ssl_enabled=settings.CHROMA_SSL,
     )
 
-    # Initialize and return Chroma with remote settings
-    db = Chroma(
+    return Chroma(
         client_settings=chroma_settings, embedding_function=get_embedding_function()
     )
-
-    # Load the existing database on local.
-    # db = Chroma(
-    #     persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
-    # )
-
-    return db
